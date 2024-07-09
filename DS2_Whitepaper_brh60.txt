@@ -1,0 +1,136 @@
+﻿10,000 hours rule as applied to Acquire
+Brian Holland
+
+
+EXECUTIVE SUMMARY
+The board game Acquire is one with a measured outcome where the mental representation and mechanics are complex enough where winning consistently among competitive players is extremely difficult. I used approximately 10 years-worth of data to extract information and investigate if the ‘10,000 hours rule’ applies here (ie. does playing more translate into winning more often). Several machine learning models were fit to the data, and investigative analysis was performed to separate players based on their skill.
+
+
+INTRODUCTION
+The original research behind the so-called ‘10,000 hours rule’ was based on a study of  Berlin violin students published in 1993 (Ericsson, et. al., 1993). “According to this rule, it takes ten thousand hours of practice to become a master in most fields” (Ericsson, 2016, 109). However, as Ericsson elaborates, this is a massive over-simplification of a dynamic, nuanced, and difficult learning process (the ‘rule’ was popularized by another author’s derivative work, but that is another matter). He notes that this only applies to “field[s] in which the best performers have attained a level of performance that clearly sets them apart from people who are just entering the field;” and explicitly states that it applies in things like chess and gymnastics, but does not apply in fields like engineering, teaching, and consulting (Ericsson, 2016, 98). I used Acquire game results to illustrate if players with more experience became better players simply through their experience, or if there is something more complex at work. The purpose of this analysis, similar to the purpose of Ericsson’s work, is to see if improving skill in some area is merely a matter of presence and performance, or if there are complicated learning tactics at work in parallel.
+        Acquire is a board game that was originally published by 3M in 1964 and has come in and out of print several times since (Acquire | Board Game, n.d.). In this game, small “companies” (branded as hotel chains) are founded, grown, and merged together, while players “invest” in them by buying shares of stock to compete for market dominance. The combination of tile placement and share(s) purchase are the only two things a player can do on their turn. An online version of the game is hosted publicly, coded and owned by one Mr Timothy Styer, with code hosted on GitHub and the live HTTP version hosted on AWS (Styer, 2014). He was contacted via his posted e-mail address and he kindly provided historical data upon request.
+
+
+
+
+  
+
+Figure 1: A screenshot of a game of Acquire underway
+
+
+DATA
+There could be “perfect” data to determine if types and behaviors of practice are linked tightly to outcomes. It would be a detailed and comprehensive collection of player practice habits and tactics as well as their gameplay results. The studies performed by Ericsson in Peak attempted to do just this by constructing a simple “game” that was easier to play and document than any other while simultaneously documenting and analyzing practice habits. Since only the gameplay results are available (and practical) here, this should give clues to if there are different skill levels (from practice or otherwise) or if the best strategy to improve skill is to simply play more and more games.
+        The data provided by Mr Styer from the website consist of about 404,000 game records (1.1 million games were in the archive, but our observations are limited to fully completed four-player games). The full archive contributed is actually an incredibly rich trove of information that has been cleverly multiplexed and stored as Protocol Buffers (see Implementation Appendix). The archive contains every move by every player in every game over roughly the last 10 years. What is analyzed here barely scratches the surface of what’s possible with this data set. This collection only includes the user IDs of the four players and their final score. From this we can create a tabulation of players and calculate how many games they’ve played in and won over the course of their play history on the site.
+The data set also comes with a few caveats that are worth noting. The website is completely public, and there is absolutely no registration process and no expectation of privacy of any kind. However, that openness also has an impact on the assumptions that normally carry over from a registration process like user or email uniqueness. Moreover, anecdotal evidence in the data suggests that users do in fact intentionally create multiple usernames for themselves for various reasons. The community on the site is fairly rigorous, with an extremely negative attitude towards abandoning a game before its full completion, which also brings some difficulty for our research question. For our purposes, we will assume any user that played in fewer than 20 games falls below our scope of interest and will be screened out from player-level analysis (but games in which they played will remain).
+From the given columns, after calculating the winning seat (1, 2, 3, or 4) we can engineer a new feature of interest: win-ratio. Since all the games in our analysis have four players, we can consider “even odds” to be 0.25, i.e., a 1-in-4 chance of winning (a player with a win ratio of 0.3 would be considered a strong player). There were a grand total of about 14,000 unique players, only 6,000 of which ever won even a single game (but only 43 players played more than 20 games and yet never won any). Other factors could be added to this tabulation about player performance like max, mean, and standard deviation of final scores for a given player as a further metric of player performance. However, this was out-of-scope for this project.
+  
+
+
+Figure 2: Histograms of played games, won games, and win ratios of players (those with more than 20 games played).
+
+
+In the mechanics of gameplay, players choose one of six tiles they have in their hand to play, and choose up to three shares of company stock to purchase. Both those choices are purely based on skill, but what tiles are in your hand is purely random (I have seen no evidence that randomization failures are present or suspected). The game strikes a balance of skill and luck. Some randomness will be inherent, but an interesting bias was displayed during analysis. Player order is determined randomly at the start of the game, but player position does seem to have at least some influence on who wins (see Table 1). This might mask some of the prediction results even more than the noise of the implicit randomness, but also might help highlight player skill (such as when a poor player wins merely because they went first or when a player with more skill still wins despite going last). This was not directly factored into the models themselves, but instead was left to the models to extract or apply as necessary.
+
+
+Player1 wins
+	Player2 wins
+	Player3 wins
+	Player4 wins
+	109633
+	105247
+	97779
+	92053
+	Table 1: Counts of each player position winning.
+  
+
+Figure 3: Favorability by seat number (relative to “even odds”)
+
+
+METHODOLOGY
+        We want to know if simply playing a game improves one’s skill. We will examine this with a few different factors in two paradigms. First, we will look at three models for predicting a game’s winning seat (player 1, 2, 3, or 4) using two different feature variables. We will compare using GaussianNB, KNN, and XGBoost models based on a game’s players’ number of games played, and then separately based their win ratios. This will tell us if playing and/or winning many games becomes a strong predictor of winning additional future games. Then we will examine the relationship of playing more games to increasing win ratio using OLS with win ratio as a function of games played. A brief summary of each model as it applies to our data is listed below. The input data into these models was a duplicate of the games data, but with substitution. In other words, if players 4, 8, 13, and 44 were playing against each other, those four players’ play-counts would be substituted in for their IDs for the first analysis, and their win-ratios for the second. The target variable to predict in this case would be the winning seat (1, 2, 3 or 4).
+
+
+* GaussianNB: “When the predictors take up a continuous value and are not discrete, we assume that these values are sampled from a gaussian distribution.” (Gandhi, 2018) Our inputs are indeed normally distributed, so players' distributions of scores would be modeled and a predicted winning seat would be returned. The trouble comes in that even though two players might have similar play counts, their final score distributions (a proxy for winning a game) might be different. This is sadly not factored into the analysis since the distribution of the play counts (from a feature perspective) was the only input.
+
+
+* KNN: “KNN is a non-parametric, supervised learning classifier, which uses proximity to make classifications or predictions about the grouping of an individual data point.” (What Is the K-Nearest Neighbors Algorithm?, n.d.) The simplest way of describing applying this to our data set is “what happened the last time players with similar records played against each other?” It will select the ‘K’-most similar games and estimate outcomes based on history. In our data, this has an odd peculiarity and I did not know a way to denormalize it. After we substitute play counts into each seat for each player, it becomes difficult to equate collections of similar players. For example, after substitution, suppose the play counts were 400, 1400, 1000, and 1200 for a game. That game should be treated effectively identical to a game with the same play counts but a different seat order (such as occurs frequently when the same people play against each other but end up in different seats).
+
+
+* XGBoost: This is a Gradient Boosting Decision Tree model. “The term ‘gradient boosting’ comes from the idea of ‘boosting’ or improving a single weak model by combining it with a number of other weak models in order to generate a collectively strong model. Gradient boosting is an extension of boosting where the process of additively generating weak models is formalized as a gradient descent algorithm over an objective function.” (XGBoost – What Is It and Why Does It Matter?, n.d.) In this case, the objective function was Softmax (estimate the probability of each seat winning and pick the highest) to predict the winning seat.
+
+
+* OLS: “[R]egression is basically a way to predict unknown quantities from a batch of existing data. … It tries to find the line going through the sample data that minimizes the sum of the squared errors.” (Powell et al., n.d.) In this case, an OLS model will help describe players’ abilities over time (win-ratio as a function of games played). This way, the improvement of a player can be visualized as a line sloping upwards or downwards if that player is getting better or worse.
+
+
+FINDINGS
+The findings were relatively disappointing in terms of prediction. One difficulty (aside from the large factor randomness plays in the game itself) was that it would be unfair to predict a “present” game based on future games. Additionally, if we wanted to re-calculate a players count and win-ratio for every game prediction, it would increase the computational complexity of the analysis exponentially. So the training set had to be selected exclusively from the earlier games. The first 80% of the data were chosen as the training set, and the latter 20% made up the test set. This puts the model at a disadvantage for two reasons. First, it will know nothing about new players that started during the test data time period (and therefore have zero predictive information). Second, it will be unable to account for changes in player performance such as a player getting better or worse after the train/test transition point. Both of these could be overcome operationally, but it is computationally inefficient to do so.
+Since the game involves a high degree of chance, getting highly accurate predictions would have been a sign that something was significantly wrong. However, the accuracy was quite poor and was effectively the same as predicting a winner randomly. Table 2 shows the exact findings and illustrates that chance is the dominant factor in determining the winner (keeping in mind that low-skilled players will have much lower odds of winning).
+
+
+
+
+Model
+	Accuracy with 
+Play-count features
+	Accuracy with 
+Win-ration features
+	KNN
+	0.26
+	0.28
+	GaussianNB
+	0.28
+	0.30
+	XGBoost
+	0.28
+	0.31
+	Table 2: Three models and corresponding accuracy in the two feature paradigms.
+
+
+The OLS analysis of players was much more fruitful in terms of insights. Figure 4 shows each player’s win-count versus the number of games played (the slope of their line is their win-ratio). From this we can clearly see that the obvious is certainly true: the more games you’ve played, the more games you’ve won, in terms of sheer numbers. But the real key is to look at the rate at which each player wins games. For example, out of 1,000 games, a poor player will only win about 100, but an excellent player could win as many as 300-400 (this is the same as a player’s win-ratio as discussed earlier).
+For the OLS analysis, to save on computation and help ignore outliers, it was limited to only players who had played more than 500, but less than 10,000 games. Looking at a graph of player win-ratio vs play-count in figure 5, we can see most players stabilize to quite a steady level about two thousand games. But the level at which they plateau is quite varied. Also, many players start out with either a very high or very low win-ratio, and gravitate towards “even odds”. This makes sense on a number of levels. Poorer players would continue to increase their skill and nuance, and stronger players would succumb to the random aspect of the game.
+
+
+  
+  
+
+Figure 4 (left): Wins versus games played, each line is a different player
+        Figure 5 (right): Win-ratio versus games played (each line is a different player)
+
+
+        We can further separate players by properties of the change in their win-ratio over time. To do this, a least-squares regression was performed on the win-ratio data for each player. Two results for each player were obtained: base ability (intercept) and improvement (slope). In figure 6, a 2D histogram of the slope and intercept for all players, shows a clear pattern.
+  
+
+        Figure 6: OLS results with x-axis as intercept, y-axis as slope, each dot is colored according to how many players are in the bin at that intersection.
+
+
+        The units are not very interpretable since the scale of a small win-ratio to the large number of games tends to skew things wildly. We can, however, see a nearly-even split between players who started ‘above’ or ‘below’ what I’ve been calling “even odds”. Some players started out well, but got worse, and some started out poor, but managed to improve. The handful of players who started out better-than-even but still managed to improve are who I would say are the players of interest in terms of performance. 
+
+
+CONCLUSION
+        In brief, there were two main conclusions. The chosen methods cannot effectively predict the winner appreciably better than random chance. And players tend to mostly either start out as good players or become better players (and only seldom both). This leads us to believe that if we want to improve the quality of our play and win more games, simply playing more games is not enough (this is Ericsson’s fundamental theory in Peak). We must become students of the game and students of better players in addition to playing the game.
+And of course, just playing for fun is also acceptable. The 10,000 hours rule is not one by which to make major decisions or to govern one's life or livelihood. Things like teaching, engineering, and gardening are explicitly excluded from the rule’s paradigm, so no matter what this data could have shown, we know the rule comes with limitations and boundaries. Hopefully we all know that we don’t have to win to have fun.
+One difficulty with further analysis of this archive is extracting the data can be somewhat cumbersome and computationally difficult. They are stored as a Protocol Buffer, so any tabular data for processing has to be carefully constructed by using a custom script that has the full mappings encoded in it. It then has to parse 16 Gigabytes of files to compile the data into a CSV.
+        
+
+
+
+
+________________
+
+
+BIBLIOGRAPHY
+Acquire | Board Game. (n.d.). BoardGameGeek. Retrieved March 3, 2023, from https://boardgamegeek.com/boardgame/5/acquire
+Ericsson, A. (1993). The Role of Deliberate Practice in the Acquisition of Expert Performance. Psychological Review, 100(3), 363-406. https://graphics8.nytimes.com/images/blogs/freakonomics/pdf/DeliberatePractice(PsychologicalReview).pdf
+Ericsson, A. (2016). Peak: Secrets from the New Science of Expertise. Houghton Mifflin Harcourt.
+Gandhi, R. (2018, May 5). Naive Bayes Classifier. What is a classifier? | by Rohith Gandhi. Towards Data Science. Retrieved April 9, 2023, from https://towardsdatascience.com/naive-bayes-classifier-81d512f50a7c
+Google. (n.d.). Protocol Buffers Documentation. Protocol Buffers Documentation. Retrieved April 6, 2023, from https://protobuf.dev/
+Powell, V., Lehe, L., & Johnson, I. (n.d.). Ordinary Least Squares Regression explained visually. Setosa.IO. Retrieved April 9, 2023, from https://setosa.io/ev/ordinary-least-squares-regression/
+Styer, T. (2014). Acquire. Acquire. Retrieved March 3, 2023, from https://acquire.tlstyer.com/
+Understanding K-means Clustering in Machine Learning | by Education Ecosystem (LEDU). (2018, September 12). Towards Data Science. Retrieved April 9, 2023, from https://towardsdatascience.com/understanding-k-means-clustering-in-machine-learning-6a6e67336aa1
+What is the k-nearest neighbors algorithm? (n.d.). IBM. Retrieved April 9, 2023, from https://www.ibm.com/topics/knn
+XGBoost – What Is It and Why Does It Matter? (n.d.). NVIDIA. Retrieved May 9, 2023, from https://www.nvidia.com/en-us/glossary/data-science/xgboost
+________________
+
+
+IMPLEMENTATION APPENDIX
+A Protocol Buffer is “Google’s language-neutral, platform-neutral, extensible mechanism for serializing structured data – think XML, but smaller, faster, and simpler” (Google, n.d.). The archive donated was a folder of hundreds of server logs stored as protocol buffers. The efficiency in storage unfortunately came at a cost of complexity since the stored values in addition to not being human readable aren’t even intelligible when translated back into their multiplexing integers. Each integer represents a game action and the decoding key is built into the script and is quite complicated. These buffers had to be scanned with a customized script that was written specifically for the purpose of building the CSV file in question. This script was excluded from the source code for this project because it was not a part of the analysis itself, but merely a pre-processing step to obtain the data, much like collaborating with the site owner. However, if this code is needed, merely contact the author and it can be discussed.

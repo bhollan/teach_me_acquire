@@ -1,0 +1,29 @@
+Objective
+The goal of Acquire is to have the highest net worth (cash and stock value) at the end of the game by founding, merging, and investing in hotel chains.
+
+Setup
+Board and Tiles: The board consists of a 12x9 grid of squares, each identified by a letter and number (e.g., A1, B2). Players draw tiles (one for each square on the board) from a face-down pool.
+Starting Tiles: Each player draws six tiles and keeps them hidden from the other players. One tile is drawn randomly to determine the starting player.
+Game Play
+Turns: On your turn, you will:
+
+Place one of your tiles on the board.
+Form or expand a hotel chain.
+Draw a new tile to replace the one played.
+Forming a Hotel Chain: If you place a tile next to another tile(s) but no hotel chains are touching, you can start a new hotel chain. Choose a hotel chain from the available ones and place its marker on the tiles.
+
+Expanding a Hotel Chain: If you place a tile adjacent to an existing hotel chain, you expand that chain.
+
+Merging Hotel Chains: If you place a tile that connects two or more hotel chains, a merger occurs:
+
+The larger hotel chain (one with more tiles) remains, and the smaller one(s) are absorbed.
+Shareholders of the absorbed chain receive bonuses based on their holdings.
+Players may then sell stock from the absorbed chain or trade it for stock in the surviving chain.
+Buying Stocks: At the end of your turn, you can buy up to three shares of any hotel chains that are currently on the board.
+
+Special Rules
+Majority Shareholder Bonuses: When a merger happens, the majority shareholder and the second largest shareholder receive bonuses.
+End of Game: The game ends when one hotel chain has 41 or more tiles or when all remaining hotel chains are "safe" (have 11 or more tiles and cannot be merged into another chain). Players cash in their stocks and calculate their net worth.
+Winning the Game
+The player with the highest net worth (cash plus the value of their stocks) at the end of the game wins.
+

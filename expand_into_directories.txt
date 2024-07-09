@@ -1,0 +1,7 @@
+
+/*
+for file in *.7z; do mkdir "${file%.*}" && mv "$file" "${file%.*}"; done
+*/
+
+
+find . -type f -name '*.7z' -execdir sh -c '7z x "$1"' _ {} \;
