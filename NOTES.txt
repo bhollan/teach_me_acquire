@@ -1,0 +1,101 @@
+Build an extraction script that extracts a game buffer into text an LLM/RLA can consume.
+
+From below (and updated), but giving error(s):
+
+find /home/bhollan/code/acquire_games_raw/ -type f -print0 | shuf -zn1 | xargs -0 node /home/bhollan/code/acquire2/build/src/analyze/outputOneGame.js
+
+=========OLDvv========NEW^^==========
+
+I want to train an LLM to help me improve my Acquire skills.
+What I will need is a huge pile of text files and a way to "teach" it.
+I will need some compute time.
+
+
+
+
+tim commands meeting:
+run 'yarn' by itself
+yarn tsc --watch
+yarn review
+node dist/analyze/outputOneGame.js ../acquire-games/1651489894-1/7707
+use the 'build' folder instead of 'dist'
+edit the TS while yarn is 'watching' and recompiling on-save
+
+SHELL COMMANDS OF INTEREST:
+
+Pick X (currently '1') random files and do Y with it (currently analyzeOneGame):
+find /home/bhollan/code/sandbox/ -type f -print0 | shuf -zn1 | xargs -0 node /home/bhollan/code/acquire2/dist/analyze/outputOneGame.js
+
+
+
+
+Extract all the zip files and join the folder name with the file name:
+find . -type f -name '*.7z' -execdir sh -c '7z x "$1"' _ {} \;
+
+
+
+
+start of server date
+monotoic increase  of ??ID??
+p7zip
+unzip/extract all files
+dist folder
+Type Script Compiler
+4,2,3,1
+placings.txt
+one-player games?
+outputPlacingsTables.js
+first-turn advantage
+
+
+
+
+Charts I want:
+	Turn order & win percentage
+	number of games by type
+	"Won margin" (wins minus losses) and/or win percentages
+	"Calibrated" to their "first win": 4-line chart of finish_rank vs games_played
+	ranking vs games_played (does playing more improve your skill level?)
+	Comparison of ranking algorithms (and perspectives)
+	Histogram of username lengths (oddities)
+	Cash over course of game
+	Net over course of game
+	Win likelyhood over course of game
+	Stock share(s) viz
+	Game time histories
+	Heatmaps (time, board)
+	margin-of-victory histogram
+	Sankey of funding (from/to)
+	First-two-mergers win percentage
+	Randomness evaluation
+	Merger tile heatmap
+	Calculate maximum possible final net worth
+
+Tables needed:
+	players
+	games
+	moves
+
+Text:
+I love the board game Acquire (link). I loved playing it IRL, and found an online version that was much faster paced with a very devout userbase. I was intensely curious about some aspects of the community and gameplay, and I was also not as good at the game as most of the users online. So I resolved to see if I could use my data science skills to help understand this community, gameplay, and maybe even develop a winning strategy. 
+
+I also really would like to learn streamlit development both for analysis and for sharing projects. This is a perfect opportunity to learn a new platform while also honing my skills in this board game, and as a bonus, I get to show off my data science skills in the process!
+
+The basic game page site also has a helpful /stats page to check a players history. This was my first objective to peer into this community. I've done my share of web scraping, and I planned on doing some simple scraping and crawling to get a handle for things like how many total players there were and how many games each had played. This would only have taken a few minutes to script out, except for the fact that a given player's statistics are only fetched via AJAX and populated after loading. So this meant using Selenium to simulate a headless browser to execute the jQuery script that was fetching the player history.
+
+So let's do this in 3 layers, with increasing granularity. We'll do Players, then Games, and finally Moves (which will take a while to collect enough interesting data). For Players, we'll stick to basic stats at first, then for games we'll do some fun vizualizations, then after we've done the same for moves, we'll get fancy like a win-prediction if possible.
+
+It took some digging and some web dev experience, but I found a JSON endpoint already available instead of having to scrape HTML. And instead of using the normal Python `requests` package in pandas (which is fine for 2, 22, or 200 requests), I had 23000 (and then some) to do. The `aiohttp` and `asyncio` packages turn it into a XX seconds operation to make 23000 HTTP requests instead of waiting 350+ minutes for each 1-second request to complete. Sadly, it doesn't run inside pandas due to a thread-nesting issue, but running it as a normal script worked just fine. So I built the basic dataframe first in Jupyter with Pandas, then filled the 'stats_page' content with a normal script (via a pickle file).
+
+This is also a good time to discuss the difference between 0 and NAN. It is possible to have a row deleted from a database, so to know for certain a username existed is one thing. Knowing how many opponents they faced is another. It's also possible on this platform to have an account, but never play any games (more on that later). So in our case, NAN has a meaning. It means we know this user existed, but we don't know how many games they've ever player. On the other hand, if we say they have faced 0 opponents, that is a different statement. So for our purposes, if the GET request fails, we will say they have faced NAN opponents, but if they've played 0 games, then they have faced 0 opponents.
+
+
+Next steps:
+Update player scraper to export games CSV file
+Capture every move
+
+See if it's easier to adapt site code vs create a 'custom' listener.
+cron jobs:
+who's in the lobby?
+
+Windows app "NetAcquire"
