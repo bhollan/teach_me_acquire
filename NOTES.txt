@@ -1,3 +1,55 @@
+=======================================
+
+
+Node Version 18.14? 22.4.1?
+Module Mode?
+Not yarn but PNPM
+
+load all files into a "RAM disc"
+
+
+instead of doing it one-by-one, 
+
+
+
+OUTPUTBRIANCLASS.JS
+import { PB_GameMode } from '../common/pb';
+import { getFinalPlayerScores, iterateGamesInDirectory } from './misc';
+
+function main(dirPath: string) {
+for (const { game } of iterateGamesInDirectory(dirPath, true)) {
+if (game.gameMode === PB_GameMode.SINGLES_4) {
+const endTimestamp = game.gameStateHistory[game.gameStateHistory.length - 1].timestamp;
+const userIDs = game.userIDs;
+const playerScores = getFinalPlayerScores(game);
+
+console.log([endTimestamp, ...userIDs, ...playerScores].join(','));
+}
+}
+}
+
+main(process.argv[2]);
+
+
+
+----------------------------
+
+
+set -x
+
+ACQ_TMP=/tmp/tim/acquire
+
+ls -Sd $ACQ_TMP/gameProtocolBufferBinaries/* | xargs -n 1 -P 10 tsx ~/code/mine/acquire2/src/analyze/outputBrianClassCSV.ignore.js > $ACQ_TMP/brianClass.csv
+sort $ACQ_TMP/brianClass.csv > $ACQ_TMP/brianClassSorted.csv
+mv $ACQ_TMP/brianClassSorted.csv $ACQ_TMP/brianClass.csv
+
+
+outputOneGame -> outputGameState
+
+Should all tiles be known? Whose tiles should be shown?
+
+
+
 
 find /home/bhollan/code/raw_acquire_games/ -type f -print0 | shuf -zn1 | xargs -0 tsx /home/bhollan/code/acquire2/src/analyze/outputOneGame.ts
 
