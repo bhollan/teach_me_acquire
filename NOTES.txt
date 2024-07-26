@@ -1,3 +1,27 @@
+
+find /home/bhollan/code/raw_acquire_games/ -type f -print0 | shuf -zn1 | xargs -0 tsx /home/bhollan/code/acquire2/src/analyze/outputOneGame.ts
+
+pull changes and rebase 'over' the 'analyze' branch
+
+install pnpm
+install tsx
+install volta
+
+
+What columns do I want for state/action pairs that would also work for other analysis?
+	GAMEID
+	PLAYERID
+	MOVEID
+	SCORES [0,1,2,3]
+	SHARES [0,1,2,3]
+	TILES [whatever that looks liks]
+	NETWORTH [0,1,2,3]
+	MERGER_TRIGGER (boolean)(only trigger OR choice, never both; ie 'neither' is a 'normal' move)
+	MERGER_CHOICES (boolean)
+	
+
+===========================
+
 Build an extraction script that extracts a game buffer into text an LLM/RLA can consume.
 
 From below (and updated), but giving error(s):
